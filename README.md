@@ -1,63 +1,75 @@
-# Astro Starter Kit: Blog
+# Richard Research Blog
+
+个人博客，记录科研笔记、计算流体力学（CFD）与数值模拟相关的内容。
+
+## 技术栈
+
+- [Astro](https://docs.astro.build) 7（纯静态输出）
+- Markdown / MDX 内容集合
+- `@astrojs/rss` 生成 RSS，`@astrojs/sitemap` 生成站点地图
+- 本地字体（Atkinson），无第三方 CDN 依赖
+
+## 本地开发
 
 ```sh
-npm create astro@latest -- --template blog
+npm install
+npm run dev      # 开发服务器 http://localhost:4321
+npm run build    # 构建到 dist/
+npm run preview  # 预览构建结果
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+需要在后台常驻运行开发服务器时（例如由 AI 助手操作），使用：
 
-Features:
+```sh
+astro dev --background
+astro dev status
+astro dev logs
+astro dev stop
+```
 
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and Open Graph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
+## 写文章
 
-## 🚀 Project Structure
+在 `src/content/blog/` 下新建 `.md` 或 `.mdx` 文件，文件名即 URL 路径，例如
+`src/content/blog/hello-cfd.md` 对应 `/blog/hello-cfd/`。
 
-Inside of your Astro project, you'll see the following folders and files:
+必需的 frontmatter：
+
+```yaml
+---
+title: '文章标题'
+description: '一句话摘要，用于列表、RSS 和 SEO'
+pubDate: 'Nov 19 2026'
+---
+```
+
+可选字段：
+
+- `updatedDate`：最后更新日期
+- `heroImage`：头图，使用相对路径，如 `'../../assets/example.jpg'`
+
+## 目录结构
 
 ```text
-├── public/
-├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── content/
-│   ├── layouts/
-│   └── pages/
-├── astro.config.mjs
-├── README.md
-├── package.json
-└── tsconfig.json
+src/
+├── assets/            图片与字体
+├── components/        Header、Footer、BaseHead、日期等组件
+├── content/blog/      博客文章（Markdown / MDX）
+├── layouts/           BlogPost 布局
+└── pages/             路由：首页、/blog、/about、/rss.xml
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+站点标题和描述在 `src/consts.ts` 中修改。
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+## 部署
 
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
+代码推送到 GitHub `25988ra/my_blog` 的 `main` 分支后，由 Cloudflare 自动构建部署：
 
-Any static assets, like images, can be placed in the `public/` directory.
+- 构建命令：`npm run build`
+- 输出目录：`dist`
+- Node 版本：见 `.nvmrc`（24）
 
-## 🧞 Commands
+## 待办
 
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
-
-## Credit
-
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+- 把 `astro.config.mjs` 中的 `site` 改为实际部署域名，否则 RSS、sitemap 和
+  canonical 链接会指向 `example.com`。
+- 替换 `src/assets/blog-placeholder-*.jpg` 作为默认社交分享图的占位图片。

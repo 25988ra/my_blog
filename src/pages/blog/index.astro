@@ -13,9 +13,9 @@ const posts = (await getCollection('blog')).sort(
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		<BaseHead title={`文章 - ${SITE_TITLE}`} description={SITE_DESCRIPTION} />
 		<style>
 			main {
 				width: 960px;
@@ -69,6 +69,10 @@ const posts = (await getCollection('blog')).sort(
 			ul a:hover img {
 				box-shadow: var(--box-shadow);
 			}
+			.empty {
+				color: rgb(var(--gray));
+				text-align: center;
+			}
 			@media (max-width: 720px) {
 				ul {
 					gap: 0.5em;
@@ -90,6 +94,7 @@ const posts = (await getCollection('blog')).sort(
 		<Header />
 		<main>
 			<section>
+				{posts.length === 0 && <p class="empty">还没有发布文章，敬请期待。</p>}
 				<ul>
 					{posts.map((post) => (
 						<li>
