@@ -1,49 +1,58 @@
 ---
 import { SITE_TITLE } from '../consts';
-import HeaderLink from './HeaderLink.astro';
+
+const links = [
+  ['/', '首页'],
+  ['/blog/', '文章'],
+  ['/projects/', '项目'],
+  ['/archives/', '归档'],
+  ['/about/', '关于'],
+  ['/latex-lab/', 'LaTeX Lab'],
+];
+const current = Astro.url.pathname.replace(/\/?$/, '/');
 ---
 
-<header>
-	<nav>
-		<h2>
-			<a href="/">{SITE_TITLE}</a>
-		</h2>
-		<div class="internal-links">
-			<HeaderLink href="/">首页</HeaderLink>
-			<HeaderLink href="/blog">文章</HeaderLink>
-			<HeaderLink href="/about">关于</HeaderLink>
-		</div>
-	</nav>
+<header class="site-header">
+  <div class="header-inner shell">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true">R</span>
+      <span>{SITE_TITLE}</span>
+    </a>
+    <nav class="main-nav" aria-label="主导航">
+      {links.map(([href, label]) => {
+        const active = href === '/' ? current === href : current.startsWith(href);
+        return <a href={href} aria-current={active ? 'page' : undefined}>{label}</a>;
+      })}
+    </nav>
+    <button class="theme-button" id="theme-toggle" type="button" aria-label="切换明暗主题" aria-pressed="false" hidden>
+      <span aria-hidden="true" class="theme-icon"></span>
+      <span class="theme-word">主题</span>
+    </button>
+  </div>
 </header>
-<style>
-	header {
-		margin: 0;
-		padding: 0 1em;
-		background: white;
-		box-shadow: 0 2px 8px rgba(var(--black), 5%);
-	}
-	h2 {
-		margin: 0;
-		font-size: 1em;
-	}
 
-	h2 a,
-	h2 a.active {
-		text-decoration: none;
-	}
-	nav {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-	nav a {
-		padding: 1em 0.5em;
-		color: var(--black);
-		border-bottom: 4px solid transparent;
-		text-decoration: none;
-	}
-	nav a.active {
-		text-decoration: none;
-		border-bottom-color: var(--accent);
-	}
-</style>
+<script>
+  const button = document.querySelector<HTMLButtonElement>('#theme-toggle');
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  let preference: string | null = null;
+  try { preference = localStorage.getItem('blog-theme'); } catch {}
+
+  if (button) {
+    const update = (theme: 'light' | 'dark') => {
+      document.documentElement.dataset.theme = theme;
+      button.setAttribute('aria-pressed', String(theme === 'dark'));
+      button.setAttribute('aria-label', theme === 'dark' ? '切换到浅色主题' : '切换到深色主题');
+    };
+    update(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+    button.hidden = false;
+    button.addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      preference = next;
+      update(next);
+      try { localStorage.setItem('blog-theme', next); } catch {}
+    });
+    media.addEventListener('change', (event) => {
+      if (preference !== 'light' && preference !== 'dark') update(event.matches ? 'dark' : 'light');
+    });
+  }
+</script>

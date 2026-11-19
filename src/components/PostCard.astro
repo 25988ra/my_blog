@@ -1,0 +1,20 @@
+---
+import { Image } from 'astro:assets';
+import FormattedDate from './FormattedDate.astro';
+import { postUrl, type Post } from '../lib/posts';
+
+interface Props { post: Post }
+const { post } = Astro.props;
+const { title, description, pubDate, category, cover, heroImage } = post.data;
+---
+<article class="post-card">
+  <a href={postUrl(post)} class="post-card-link">
+    {heroImage && <Image class="card-image" src={heroImage} alt="" width={600} height={300} />}
+    {!heroImage && cover && <img class="card-image" src={cover} alt="" loading="lazy" decoding="async" />}
+    <div class="card-content">
+      <div class="card-meta"><span>{category}</span><FormattedDate date={pubDate} /></div>
+      <h3>{title}</h3>
+      <p>{description}</p>
+    </div>
+  </a>
+</article>

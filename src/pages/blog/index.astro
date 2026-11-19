@@ -1,117 +1,89 @@
 ---
-import { Image } from 'astro:assets';
-import { getCollection } from 'astro:content';
-import BaseHead from '../../components/BaseHead.astro';
-import Footer from '../../components/Footer.astro';
-import FormattedDate from '../../components/FormattedDate.astro';
-import Header from '../../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { getPublishedPosts } from '../../lib/posts';
 
-const posts = (await getCollection('blog')).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+const posts = await getPublishedPosts();
+const categories = [...new Set(posts.map(({ data }) => data.category))].sort();
+const tags = [...new Set(posts.flatMap(({ data }) => data.tags))].sort();
 ---
+<SiteLayout title="文章" description="检索科研笔记、数值计算与站点指南">
+  <div class="page-heading">
+    <h1>科研文章</h1>
+    <p>按主题浏览，或搜索标题、摘要和正文。</p>
+  </div>
+  <form id="article-search" class="search-controls" role="search" hidden>
+    <label>搜索文章<input id="search-query" name="q" type="search" placeholder="例如：Navier–Stokes" /></label>
+    <label>分类<select id="search-category" name="category"><option value="">全部分类</option>{categories.map((category) => <option>{category}</option>)}</select></label>
+    <label>标签<select id="search-tag" name="tag"><option value="">全部标签</option>{tags.map((tag) => <option>{tag}</option>)}</select></label>
+    <button type="reset" class="button">清除</button>
+  </form>
+  <p id="search-count" class="result-status" role="status">{posts.length} 篇文章</p>
+  <p id="no-results" hidden={posts.length > 0}>{posts.length ? '没有符合条件的文章。' : '暂无已发布的文章。'}</p>
+  <h2 class="sr-only">文章列表</h2>
+  <div class="card-grid">
+    {posts.map((post) => (
+      <div data-post={post.id} data-category={post.data.category} data-tags={JSON.stringify(post.data.tags)}
+        data-search={[post.data.title, post.data.description, post.data.category, ...post.data.tags, post.body ?? ''].join(' ')}>
+        <PostCard {post} />
+      </div>
+    ))}
+  </div>
+</SiteLayout>
 
-<!doctype html>
-<html lang="zh-CN">
-	<head>
-		<BaseHead title={`文章 - ${SITE_TITLE}`} description={SITE_DESCRIPTION} />
-		<style>
-			main {
-				width: 960px;
-			}
-			ul {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 2rem;
-				list-style-type: none;
-				margin: 0;
-				padding: 0;
-			}
-			ul li {
-				width: calc(50% - 1rem);
-			}
-			ul li * {
-				text-decoration: none;
-				transition: 0.2s ease;
-			}
-			ul li:first-child {
-				width: 100%;
-				margin-bottom: 1rem;
-				text-align: center;
-			}
-			ul li:first-child img {
-				width: 100%;
-			}
-			ul li:first-child .title {
-				font-size: 2.369rem;
-			}
-			ul li img {
-				margin-bottom: 0.5rem;
-				border-radius: 12px;
-			}
-			ul li a {
-				display: block;
-			}
-			.title {
-				margin: 0;
-				color: rgb(var(--black));
-				line-height: 1;
-			}
-			.date {
-				margin: 0;
-				color: rgb(var(--gray));
-			}
-			ul li a:hover h4,
-			ul li a:hover .date {
-				color: rgb(var(--accent));
-			}
-			ul a:hover img {
-				box-shadow: var(--box-shadow);
-			}
-			.empty {
-				color: rgb(var(--gray));
-				text-align: center;
-			}
-			@media (max-width: 720px) {
-				ul {
-					gap: 0.5em;
-				}
-				ul li {
-					width: 100%;
-					text-align: center;
-				}
-				ul li:first-child {
-					margin-bottom: 0;
-				}
-				ul li:first-child .title {
-					font-size: 1.563em;
-				}
-			}
-		</style>
-	</head>
-	<body>
-		<Header />
-		<main>
-			<section>
-				{posts.length === 0 && <p class="empty">还没有发布文章，敬请期待。</p>}
-				<ul>
-					{posts.map((post) => (
-						<li>
-							<a href={`/blog/${post.id}/`}>
-								{post.data.heroImage && (
-									<Image width={720} height={360} src={post.data.heroImage} alt="" />
-								)}
-								<h4 class="title">{post.data.title}</h4>
-								<p class="date">
-									<FormattedDate date={post.data.pubDate} />
-								</p>
-							</a>
-						</li>
-					))}
-				</ul>
-			</section>
-		</main>
-		<Footer />
-	</body>
-</html>
+<script>
+  import { searchable } from '../../lib/search';
+
+  const form = document.querySelector<HTMLFormElement>('#article-search');
+  const query = document.querySelector<HTMLInputElement>('#search-query');
+  const category = document.querySelector<HTMLSelectElement>('#search-category');
+  const tag = document.querySelector<HTMLSelectElement>('#search-tag');
+  const status = document.querySelector('#search-count');
+  const empty = document.querySelector<HTMLElement>('#no-results');
+  const entries = [...document.querySelectorAll<HTMLElement>('[data-post]')].map((element) => ({
+    element, text: searchable(element.dataset.search ?? ''),
+    category: element.dataset.category, tags: JSON.parse(element.dataset.tags ?? '[]') as string[],
+  }));
+
+  if (form && query && category && tag && status && empty) {
+    const initial = new URLSearchParams(location.search);
+    query.value = initial.get('q') ?? '';
+    category.value = initial.get('category') ?? '';
+    tag.value = initial.get('tag') ?? '';
+    form.hidden = false;
+    const render = () => {
+      const words = searchable(query.value).trim().split(/\s+/).filter(Boolean);
+      let visible = 0;
+      for (const entry of entries) {
+        const match = (!category.value || entry.category === category.value)
+          && (!tag.value || entry.tags.includes(tag.value))
+          && words.every((word) => entry.text.includes(word));
+        entry.element.hidden = !match;
+        if (match) visible++;
+      }
+      status.textContent = visible + ' 篇文章';
+      empty.hidden = visible !== 0;
+      const url = new URL(location.href);
+      for (const input of [query, category, tag]) {
+        if (input.value) url.searchParams.set(input.name, input.value);
+        else url.searchParams.delete(input.name);
+      }
+      history.replaceState(null, '', url);
+    };
+    form.addEventListener('submit', (event) => { event.preventDefault(); render(); });
+    form.addEventListener('input', render);
+    form.addEventListener('reset', () => queueMicrotask(render));
+    render();
+  }
+</script>
+
+<style>
+  .search-controls { display: grid; grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)) auto; align-items: end; gap: .65rem; margin-bottom: 1.1rem; }
+  .search-controls label { display: grid; gap: .25rem; font-size: .95rem; font-weight: 700; min-width: 0; }
+  .card-grid > div, .card-grid > div :global(article) { height: 100%; min-width: 0; }
+  @media (max-width: 640px) {
+    .search-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .search-controls label:first-child { grid-column: 1 / -1; }
+    .search-controls button { justify-self: start; }
+  }
+</style>

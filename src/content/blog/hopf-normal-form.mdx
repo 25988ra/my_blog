@@ -1,0 +1,55 @@
+---
+title: 'Hopf 分岔正规形的振幅判据'
+description: '用复振幅方程区分超临界与次临界 Hopf，并说明如何检查数值结果。'
+pubDate: '2026-11-19'
+category: '非线性动力学'
+tags: ['分岔', 'Hopf', '数值计算']
+draft: false
+---
+
+考虑局部复振幅 $z=r e^{\mathrm{i}\theta}$，令 $\mu$ 表示穿越临界点的参数。采用以下符号约定：
+
+$$
+\begin{aligned}
+\dot z &= (\mu+\mathrm{i}\omega_0)z+(a+\mathrm{i}b)|z|^2z,\\
+\dot r &= \mu r+ar^3,\qquad
+\dot\theta = \omega_0+br^2.
+\end{aligned}
+$$
+
+## 何时出现小振幅周期解
+
+当 $\mu$ 与 $a$ 异号时，三次截断给出 $r_*=\sqrt{-\mu/a}$。在 $r_*$ 处对径向速度求导，得到 $-2\mu$。因此在这个约定下，$a<0$ 时周期支在 $\mu>0$ 一侧径向稳定，$a>0$ 时周期支在 $\mu<0$ 一侧径向不稳定。
+
+线性化矩阵的简单形式为
+
+$$
+J = \begin{pmatrix}
+\mu & -\omega_0\\
+\omega_0 & \mu
+\end{pmatrix}.
+$$
+
+特征值为 $\mu \pm \mathrm{i}\omega_0$。若同时有两对共轭特征值接近虚轴，应检查 Double Hopf 的耦合振幅方程，单振幅判据一般不足以描述局部动力学。
+
+## 数值检查
+
+下例计算三次截断的振幅。若用直接时间积分检验稳定周期支，需要排除暂态，并记住不稳定周期支通常需要延拓或其他专用方法。
+
+```matlab
+mu = [0.01, 0.02, 0.04];
+a = -2;
+radius = sqrt(-mu ./ a);
+disp(radius);
+```
+
+若用 C++ 实现同一计算，可以显式检查非零周期支的存在条件。
+
+```cpp
+#include <cmath>
+
+double hopf_radius(double mu, double a) {
+    if (a == 0.0 || -mu / a <= 0.0) return 0.0;
+    return std::sqrt(-mu / a);
+}
+```

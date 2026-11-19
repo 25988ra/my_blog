@@ -1,31 +1,40 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
-import Header from '../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
----
+import SiteLayout from '../layouts/SiteLayout.astro';
+import HomeHero from '../components/HomeHero.astro';
+import PostCard from '../components/PostCard.astro';
+import { researchTopics } from '../consts';
+import { filterUrl, getPublishedPosts } from '../lib/posts';
 
-<!doctype html>
-<html lang="zh-CN">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-	</head>
-	<body>
-		<Header />
-		<main>
-			<h1>科研笔记与数值模拟</h1>
-			<p>
-				这里记录我在科研工作中的学习笔记，主要包括计算流体力学（CFD）、数值模拟方法，以及相关工具和代码的使用心得。
-			</p>
-			<p>
-				所有文章都在 <a href="/blog/">博客</a> 中按发布时间排列；想了解这个站点，可以看
-				<a href="/about/">关于</a>。
-			</p>
-			<p>
-				本站使用 <a href="https://astro.build/">Astro</a> 构建，源码托管在
-				<a href="https://github.com/25988ra/my_blog">GitHub</a>，通过 Cloudflare 部署。
-			</p>
-		</main>
-		<Footer />
-	</body>
-</html>
+const posts = await getPublishedPosts();
+const featured = posts.filter(({ data }) => data.featured).slice(0, 3);
+const latest = posts.slice(0, 3);
+---
+<SiteLayout wide>
+  <HomeHero />
+  <div class="shell home-content">
+    <section aria-labelledby="research-title">
+      <h2 id="research-title">研究方向</h2>
+      <div class="card-grid research-grid">
+        {researchTopics.map((topic) => (
+          <a class="topic-card" href={filterUrl('tag', topic.tag)}>
+            <h3>{topic.title}</h3>
+            <p>{topic.note}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+    {featured.length > 0 && <section aria-labelledby="featured-title">
+      <h2 id="featured-title">精选文章</h2>
+      <div class="card-grid">{featured.map((post) => <PostCard {post} />)}</div>
+    </section>}
+    <section aria-labelledby="latest-title">
+      <div class="section-head">
+        <h2 id="latest-title">最新文章</h2>
+        <a href="/blog/">查看全部</a>
+      </div>
+      {latest.length
+        ? <div class="card-grid">{latest.map((post) => <PostCard {post} />)}</div>
+        : <p>暂无已发布的文章。</p>}
+    </section>
+  </div>
+</SiteLayout>

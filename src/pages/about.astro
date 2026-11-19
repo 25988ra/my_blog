@@ -1,17 +1,17 @@
 ---
-import Layout from '../layouts/BlogPost.astro';
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { GITHUB_PROFILE, GITHUB_REPO, profile, researchTopics } from '../consts';
 ---
-
-<Layout title="关于" description="关于本站与作者" pubDate={new Date('November 19 2026')}>
-	<p>
-		你好，我是 Richard。这里是我的个人博客，主要记录科研笔记、计算流体力学和数值模拟相关的内容。
-	</p>
-	<p>
-		建这个站点，一是为了把平时零散的学习记录整理下来，二是希望这些内容对同样在做数值模拟的人有所帮助。
-	</p>
-	<p>
-		如果你对文章内容有疑问或想交流，欢迎通过
-		<a href="https://github.com/25988ra">GitHub</a> 联系我。本站源码托管在
-		<a href="https://github.com/25988ra/my_blog">25988ra/my_blog</a>。
-	</p>
-</Layout>
+<SiteLayout title="关于" description="Richard 的个人介绍与研究方向">
+  <div class="page-heading">
+    {profile.avatar && <img class="about-avatar" src={profile.avatar} alt="" width="80" height="80" />}
+    <h1>关于 Richard</h1>
+    <p>{profile.intro}</p>
+  </div>
+  <section class="prose">
+    <h2>研究方向</h2>
+    <ul>{researchTopics.map((topic) => <li><strong>{topic.title}</strong>。{topic.note}</li>)}</ul>
+    <h2>联系</h2>
+    <p>欢迎通过 <a href={GITHUB_PROFILE}>GitHub</a> 交流，也可以在<a href={GITHUB_REPO}>本站源码仓库</a>反馈文章中的问题。</p>
+  </section>
+</SiteLayout>

@@ -1,0 +1,78 @@
+settings:
+  content:
+    merge: true
+
+media:
+  - name: figures
+    label: 科研配图
+    input: public/images
+    output: /images
+    extensions: [png, jpg, jpeg, webp, svg]
+    rename: safe
+
+content:
+  - name: posts
+    label: 科研文章
+    type: collection
+    path: src/content/blog
+    format: yaml-frontmatter
+    exclude: [.gitkeep]
+    filename:
+      template: "{primary}.md"
+      field: create
+    view:
+      primary: title
+      fields: [title, category, pubDate, draft]
+      sort: [pubDate, title]
+      default:
+        sort: pubDate
+        order: desc
+    fields:
+      - name: title
+        label: 标题
+        type: string
+        required: true
+      - name: description
+        label: 摘要
+        type: text
+        required: true
+      - name: pubDate
+        label: 发布日期
+        type: date
+        required: true
+        options:
+          format: yyyy-MM-dd
+      - name: updatedDate
+        label: 更新日期
+        type: date
+        default: ""
+        options:
+          format: yyyy-MM-dd
+      - name: category
+        label: 分类
+        type: string
+        default: 随笔
+      - name: tags
+        label: 标签
+        type: string
+        list: true
+      - name: cover
+        label: 头图
+        type: image
+        options:
+          media: figures
+      - name: featured
+        label: 首页精选
+        type: boolean
+        default: false
+      - name: draft
+        label: 草稿
+        type: boolean
+        default: true
+        description: 开启后不会生成公开文章页面。仓库中提交的源码仍可查看。
+      - name: body
+        label: Markdown 正文
+        type: code
+        description: 使用 $...$ 或独占行的 $$ 定界符。可在本站的在线写作页预览公式。
+        options:
+          format: markdown

@@ -1,0 +1,93 @@
+---
+import 'katex/dist/katex.min.css';
+import SiteLayout from '../layouts/SiteLayout.astro';
+
+const example = '## 研究笔记\n\n行内公式 $\\mathrm{Re}=UL/\\nu$。\n\n$$\n\\nabla \\cdot \\mathbf{u} = 0\n$$';
+---
+<SiteLayout title="在线写作" description="在浏览器中预览科研 Markdown 和 LaTeX，并通过 Pages CMS 保存与发布">
+  <div class="page-heading">
+    <h1>在线写作</h1>
+    <p>在这里预览文章正文，再把 Markdown 复制到 Pages CMS。标题、配图和发布状态在 CMS 里管理。</p>
+  </div>
+  <div class="actions publish-links" aria-label="发布工具">
+    <a class="button button-primary" href="https://app.pagescms.org/" target="_blank" rel="noopener noreferrer">登录 Pages CMS</a>
+    <a class="button" href="https://github.dev/25988ra/my_blog" target="_blank" rel="noopener noreferrer">打开 GitHub 编辑器</a>
+    <a href="/blog/blog-management-guide/#在线写作与发布">发布指南</a>
+  </div>
+  <div class="editor-grid">
+    <section class="editor-panel" aria-labelledby="markdown-input-title">
+      <h2 id="markdown-input-title">Markdown 正文</h2>
+      <label class="sr-only" for="markdown-source">Markdown 正文</label>
+      <textarea id="markdown-source" class="editor-source" rows="13" spellcheck="false" maxlength="60000">{example}</textarea>
+      <div class="actions">
+        <button class="button button-primary" type="button" id="copy-markdown">复制 Markdown</button>
+        <button class="button" type="button" id="save-draft">保存本机草稿</button>
+      </div>
+      <p class="editor-status" id="writing-status" role="status"></p>
+    </section>
+    <section class="editor-panel" aria-labelledby="markdown-preview-title">
+      <h2 id="markdown-preview-title">实时预览</h2>
+      <div class="prose editor-preview" id="markdown-preview"></div>
+      <p class="editor-status editor-error" id="writing-error" role="status"></p>
+      <noscript>启用 JavaScript 后即可预览正文。</noscript>
+    </section>
+  </div>
+</SiteLayout>
+
+<style>
+  .publish-links { margin-bottom: 1.25rem; }
+</style>
+
+<script>
+  import { previewMarkdown } from '../lib/markdown-preview';
+
+  const source = document.querySelector<HTMLTextAreaElement>('#markdown-source');
+  const preview = document.querySelector<HTMLElement>('#markdown-preview');
+  const status = document.querySelector<HTMLElement>('#writing-status');
+  const error = document.querySelector<HTMLElement>('#writing-error');
+  const key = 'research-blog-writing-draft';
+
+  if (source && preview && status && error) {
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved !== null) source.value = saved;
+    } catch {}
+
+    const update = () => {
+      error.textContent = '';
+      try {
+        preview.innerHTML = previewMarkdown(source.value);
+        if (preview.querySelector('.katex-error')) {
+          error.textContent = '部分公式无法渲染，请检查预览中的红色提示。';
+        }
+      } catch {
+        preview.replaceChildren();
+        error.textContent = '正文预览失败。请检查 Markdown 后重试。';
+      }
+    };
+
+    let timer: ReturnType<typeof setTimeout>;
+    source.addEventListener('input', () => {
+      status.textContent = '';
+      clearTimeout(timer);
+      timer = setTimeout(update, 140);
+    });
+    document.querySelector('#save-draft')?.addEventListener('click', () => {
+      try {
+        localStorage.setItem(key, source.value);
+        status.textContent = '草稿已保存在当前浏览器。';
+      } catch {
+        status.textContent = '浏览器无法保存草稿，请复制 Markdown 另存。';
+      }
+    });
+    document.querySelector('#copy-markdown')?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(source.value);
+        status.textContent = '已复制，可以粘贴到 Pages CMS。';
+      } catch {
+        status.textContent = '无法访问剪贴板，请选中正文手动复制。';
+      }
+    });
+    update();
+  }
+</script>

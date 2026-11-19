@@ -1,0 +1,15 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { GITHUB_REPO } from '../consts';
+---
+<SiteLayout title="项目" description="科研笔记、技术项目与可复用工具">
+  <div class="page-heading">
+    <h1>项目</h1>
+    <p>科研笔记和写作中使用的工具。</p>
+  </div>
+  <div class="card-grid">
+    <article class="topic-card"><h2>LaTeX Lab</h2><p>在浏览器中编写、预览和复制数学公式。</p><a href="/latex-lab/">打开公式实验室</a></article>
+    <article class="topic-card"><h2>在线写作</h2><p>预览科研 Markdown，准备通过 GitHub 发布。</p><a href="/writing/">打开写作工作台</a></article>
+    <article class="topic-card"><h2>科研博客源码</h2><p>本站使用 Astro、KaTeX 和 Cloudflare Workers。</p><a href={GITHUB_REPO}>查看 GitHub 仓库</a></article>
+  </div>
+</SiteLayout>

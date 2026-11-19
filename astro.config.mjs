@@ -2,12 +2,25 @@
 
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
+import { unified } from '@astrojs/markdown-remark';
 import { defineConfig, fontProviders } from 'astro/config';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://my-blog.2598857560.workers.dev',
 	integrations: [mdx(), sitemap()],
+	markdown: {
+		processor: unified({
+			remarkPlugins: [remarkMath],
+			rehypePlugins: [[rehypeKatex, { trust: false, maxSize: 20, maxExpand: 1000 }]],
+		}),
+		shikiConfig: {
+			themes: { light: 'github-light', dark: 'github-dark' },
+			defaultColor: 'light',
+		},
+	},
 	fonts: [
 		{
 			provider: fontProviders.local(),

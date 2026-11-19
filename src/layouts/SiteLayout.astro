@@ -1,0 +1,31 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  type?: 'website' | 'article';
+  wide?: boolean;
+}
+const { title, description = SITE_DESCRIPTION, image, type, wide = false } = Astro.props;
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <BaseHead title={title ? title + ' · ' + SITE_TITLE : SITE_TITLE} {description} {image} {type}>
+      <slot name="head" />
+    </BaseHead>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到正文</a>
+    <Header />
+    <main id="main" class:list={{ shell: !wide, 'page-main': !wide }}>
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

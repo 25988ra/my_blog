@@ -1,84 +1,72 @@
 ---
+import 'katex/dist/katex.min.css';
 import { Image } from 'astro:assets';
-import type { CollectionEntry } from 'astro:content';
-import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
+import SiteLayout from './SiteLayout.astro';
 import FormattedDate from '../components/FormattedDate.astro';
-import Header from '../components/Header.astro';
+import { filterUrl, postUrl, type Post } from '../lib/posts';
 
-type Props = CollectionEntry<'blog'>['data'];
-
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+interface Props {
+  post: Post;
+  headings: { depth: number; slug: string; text: string }[];
+  previous?: Post;
+  next?: Post;
+}
+const { post, headings, previous, next } = Astro.props;
+const { title, description, pubDate, updatedDate, category, tags, heroImage, cover } = post.data;
+const outline = headings.filter(({ depth }) => depth === 2 || depth === 3);
 ---
+<SiteLayout {title} {description} image={heroImage?.src ?? cover} type="article">
+  <header class="article-heading page-heading">
+    <p class="breadcrumb"><a href="/blog/">文章</a><span aria-hidden="true">/</span><a href={filterUrl('category', category)}>{category}</a></p>
+    <h1>{title}</h1>
+    <p>{description}</p>
+    <div class="article-meta">
+      <FormattedDate date={pubDate} />
+      {updatedDate && <span>更新于 <FormattedDate date={updatedDate} /></span>}
+    </div>
+    {tags.length > 0 && <ul class="tags" aria-label="文章标签">
+      {tags.map((tag) => <li><a href={filterUrl('tag', tag)}>{tag}</a></li>)}
+    </ul>}
+  </header>
+  {heroImage && <Image class="article-cover" src={heroImage} alt="" width={1200} height={600} />}
+  {!heroImage && cover && <img class="article-cover" src={cover} alt="" decoding="async" />}
+  <div class:list={['article-grid', { 'with-outline': outline.length > 0 }]}>
+    {outline.length > 0 && <aside>
+      <nav class="outline" aria-label="文章目录">
+        <h2>目录</h2>
+        <ol>
+          {outline.map(({ text, slug, depth }) => <li class:list={{ indent: depth === 3 }}><a href={'#' + slug}>{text}</a></li>)}
+        </ol>
+      </nav>
+    </aside>}
+    <article class="prose"><slot /></article>
+  </div>
+  {(previous || next) && <nav class="article-neighbors" aria-label="相邻文章">
+    {previous && <a class="topic-card" href={postUrl(previous)}><span>上一篇</span><strong>{previous.data.title}</strong></a>}
+    {next && <a class="topic-card" href={postUrl(next)}><span>下一篇</span><strong>{next.data.title}</strong></a>}
+  </nav>}
+</SiteLayout>
 
-<html lang="zh-CN">
-	<head>
-		<BaseHead title={title} description={description} />
-		<style>
-			main {
-				width: calc(100% - 2em);
-				max-width: 100%;
-				margin: 0;
-			}
-			.hero-image {
-				width: 100%;
-			}
-			.hero-image img {
-				display: block;
-				margin: 0 auto;
-				border-radius: 12px;
-				box-shadow: var(--box-shadow);
-			}
-			.prose {
-				width: 720px;
-				max-width: calc(100% - 2em);
-				margin: auto;
-				padding: 1em;
-				color: rgb(var(--gray-dark));
-			}
-			.title {
-				margin-bottom: 1em;
-				padding: 1em 0;
-				text-align: center;
-				line-height: 1;
-			}
-			.title h1 {
-				margin: 0 0 0.5em 0;
-			}
-			.date {
-				margin-bottom: 0.5em;
-				color: rgb(var(--gray));
-			}
-			.last-updated-on {
-				font-style: italic;
-			}
-		</style>
-	</head>
-
-	<body>
-		<Header />
-		<main>
-			<article>
-				<div class="hero-image">
-					{heroImage && <Image width={1020} height={510} src={heroImage} alt="" />}
-				</div>
-				<div class="prose">
-					<div class="title">
-						<div class="date">
-							<FormattedDate date={pubDate} />
-							{updatedDate && (
-								<div class="last-updated-on">
-									最后更新于 <FormattedDate date={updatedDate} />
-								</div>
-							)}
-						</div>
-						<h1>{title}</h1>
-						<hr />
-					</div>
-					<slot />
-				</div>
-			</article>
-		</main>
-		<Footer />
-	</body>
-</html>
+<style>
+  .article-heading { max-width: 53rem; }
+  .breadcrumb { display: flex; align-items: baseline; gap: .6rem; margin-bottom: .7rem; font-size: .95rem; }
+  .article-meta { margin-top: .75rem; }
+  .article-cover { display: block; width: min(100%, 59rem); max-height: 24rem; object-fit: cover; border-radius: .65rem; margin-bottom: 2rem; }
+  .article-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
+  .article-grid aside { min-width: 0; }
+  .outline { padding: .9rem 1rem; border: 1px solid var(--line); border-top: 2px solid var(--gold); border-radius: .5rem; background: var(--paper); }
+  .outline h2 { font-size: 1.1rem; margin-bottom: .4rem; }
+  .outline ol { list-style: none; margin: 0; padding: 0; }
+  .outline li { margin-block: .24rem; }
+  .outline li.indent { padding-inline-start: .7rem; }
+  .outline a { font-size: .9rem; text-decoration: none; display: inline-block; line-height: 1.4; }
+  .outline a:hover { text-decoration: underline; }
+  .article-neighbors { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: 1rem; max-width: 48rem; margin-top: 2.5rem; }
+  .article-neighbors span { display: block; color: var(--muted); font-size: .9rem; }
+  @media (min-width: 900px) {
+    .article-grid.with-outline { grid-template-columns: minmax(0, 48rem) minmax(10rem, 13rem); gap: clamp(1.8rem, 5vw, 4rem); }
+    .article-grid aside { grid-column: 2; grid-row: 1; }
+    .article-grid article { grid-column: 1; grid-row: 1; }
+    .outline { position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow: auto; }
+  }
+</style>

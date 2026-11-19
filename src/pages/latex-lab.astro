@@ -1,0 +1,92 @@
+---
+import 'katex/dist/katex.min.css';
+import SiteLayout from '../layouts/SiteLayout.astro';
+
+const examples = [
+  { label: 'Navier–Stokes 方程', source: String.raw`\begin{aligned}
+\partial_t \mathbf{u} + (\mathbf{u}\cdot\nabla)\mathbf{u}
+&= -\frac{1}{\rho}\nabla p + \nu\nabla^2\mathbf{u}, \\
+\nabla\cdot\mathbf{u} &= 0.
+\end{aligned}` },
+  { label: '矩阵与特征值', source: String.raw`\det\begin{pmatrix} \alpha-\lambda & -\omega \\ \omega & \alpha-\lambda \end{pmatrix}=0` },
+  { label: '积分与求和', source: String.raw`\int_0^1 x^2\,\mathrm{d}x=\lim_{n\to\infty}\frac{1}{n}\sum_{k=1}^{n}\left(\frac{k}{n}\right)^2` },
+];
+---
+<SiteLayout title="LaTeX Lab" description="在浏览器中实时预览和复制 LaTeX 数学公式">
+  <div class="page-heading">
+    <h1>LaTeX Lab</h1>
+    <p>输入数学公式，实时查看 KaTeX 排版。可以直接粘贴公式或带有定界符的 Markdown 数学块。</p>
+  </div>
+  <div class="editor-grid">
+    <section class="editor-panel" aria-labelledby="latex-input-title">
+      <h2 id="latex-input-title">LaTeX 源码</h2>
+      <label class="example-control" for="latex-examples">载入示例
+        <select id="latex-examples"><option value="">选择一个示例</option>{examples.map(({ label, source }) => <option value={source}>{label}</option>)}</select>
+      </label>
+      <label class="sr-only" for="latex-source">数学公式</label>
+      <textarea id="latex-source" class="editor-source" spellcheck="false" rows="9" maxlength="12000">{examples[0].source}</textarea>
+      <div class="actions">
+        <button class="button button-primary" type="button" id="copy-latex">复制 LaTeX</button>
+        <button class="button" type="button" id="copy-math-markdown">复制 Markdown</button>
+      </div>
+      <p id="latex-copy-status" class="editor-status" role="status"></p>
+    </section>
+    <section class="editor-panel" aria-labelledby="latex-preview-title">
+      <h2 id="latex-preview-title">实时预览</h2>
+      <div id="latex-preview" class="editor-preview"></div>
+      <p id="latex-error" class="editor-status editor-error" role="status"></p>
+      <noscript>启用 JavaScript 后即可预览公式。</noscript>
+    </section>
+  </div>
+</SiteLayout>
+
+<style>
+  .example-control { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: .65rem; margin-bottom: .7rem; font-size: .95rem; }
+</style>
+
+<script>
+  import katex from 'katex';
+  import { formulaSource, markdownFormula } from '../lib/math';
+
+  const source = document.querySelector<HTMLTextAreaElement>('#latex-source');
+  const examples = document.querySelector<HTMLSelectElement>('#latex-examples');
+  const preview = document.querySelector<HTMLElement>('#latex-preview');
+  const error = document.querySelector<HTMLElement>('#latex-error');
+  const copyStatus = document.querySelector<HTMLElement>('#latex-copy-status');
+
+  if (source && examples && preview && error && copyStatus) {
+    const update = () => {
+      error.textContent = '';
+      preview.replaceChildren();
+      const value = formulaSource(source.value);
+      if (!value) return;
+      try {
+        katex.render(value, preview, {
+          displayMode: true, throwOnError: true, trust: false, maxSize: 20, maxExpand: 1000,
+        });
+      } catch (cause) {
+        error.textContent = '公式语法错误。' + (cause instanceof Error ? cause.message : '');
+      }
+    };
+    const copy = async (value: string) => {
+      if (!value) { copyStatus.textContent = '请先输入公式。'; return; }
+      try {
+        await navigator.clipboard.writeText(value);
+        copyStatus.textContent = '已复制。';
+      } catch {
+        copyStatus.textContent = '无法访问剪贴板，请选中源文本手动复制。';
+      }
+    };
+    source.addEventListener('input', () => { copyStatus.textContent = ''; update(); });
+    examples.addEventListener('change', () => {
+      if (!examples.value) return;
+      source.value = examples.value;
+      examples.selectedIndex = 0;
+      copyStatus.textContent = '';
+      update();
+    });
+    document.querySelector('#copy-latex')?.addEventListener('click', () => copy(formulaSource(source.value)));
+    document.querySelector('#copy-math-markdown')?.addEventListener('click', () => copy(markdownFormula(source.value)));
+    update();
+  }
+</script>

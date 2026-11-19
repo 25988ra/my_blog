@@ -2,6 +2,9 @@
 title: '博客管理指南：从写作、发布到更新'
 description: '记录如何用 Markdown 写文章，在本地预览，通过 GitHub 和 Cloudflare Workers 发布，以及更新文章、管理图片和排查部署问题。'
 pubDate: '2026-11-19'
+category: '站点维护'
+tags: ['Astro', 'Cloudflare', '博客管理']
+draft: false
 ---
 
 这个博客的文章源文件保存在 GitHub 仓库 `25988ra/my_blog`。每次发布时，Astro 把 Markdown、页面和素材构建成 `dist/` 里的静态站点，Cloudflare Workers 再把构建结果发布到公开网址。日常写文章和改文章都可以在本地完成，提交到 `main` 后由 Workers Builds 接手。
@@ -80,7 +83,16 @@ git push origin main
 3. **撤下文章**时，从 `src/content/blog/` 移出或删除源文件，提交这个变更并重新部署。新构建会把文章从列表、RSS 和站点地图中移除。如果移动或改名只是为了调整网址，先考虑为旧链接配置重定向。
 4. **恢复误改**时，先用 `git log -- src/content/blog/cfd-mesh-study.md` 找到相关提交。如果该提交的所有改动都要撤销，可以用 `git revert <提交号>` 生成一次反向提交，再推送。如果只需要恢复文章中的一部分，修改原文件并提交即可。
 
-未准备公开的草稿可以放在 `src/content/blog/` 之外，并避开 `public/`。当前站点会加载文章目录下的所有 `.md` 和 `.mdx` 文件，未来的 `pubDate` 也会参与构建。
+可以在文章头部设置 `draft: true`，构建时会跳过这篇文章。未来的 `pubDate` 不会自动延迟发布。仓库是公开的，保密草稿和素材应保存在本机或有权限限制的位置。
+
+## 在线写作与发布
+
+1. 从[在线写作](/writing/)打开双栏编辑器，输入正文并预览 Markdown 和 KaTeX 公式。可以把正文保存到当前浏览器，或复制到 Pages CMS。
+2. 首次使用 [Pages CMS](https://app.pagescms.org/) 时，用 GitHub 登录，并只为 `25988ra/my_blog` 安装官方 GitHub App。选择已包含 `.pages.yml` 的分支。
+3. 在「科研文章」中新建或编辑文章，填写标题、摘要、日期、分类、标签和正文。新建时用小写英文文件名。头图可直接上传，正文配图可在「科研配图」中上传后引用 `/images/文件名`。
+4. 保留「草稿」开关可保存到 GitHub 而暂不生成公开页面。若希望审阅后发布，在写作分支编辑，确认后将 `draft` 关闭，发起 PR 并合并到 `main`。也可直接在 `main` 关闭草稿后保存，提交会触发 Cloudflare。
+
+CMS 使用 Markdown 源码编辑器，公式预览在本站完成。需要直接改 MDX 组件时，可使用 [github.dev](https://github.dev/25988ra/my_blog)。
 
 ## 修改站点和排查部署
 
