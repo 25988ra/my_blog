@@ -69,6 +69,8 @@ Workers Builds 连接 GitHub `25988ra/my_blog` 的 `main` 分支后，推送即�
 - 输出目录：`dist`
 - Node 版本：见 `.nvmrc`（24）
 
-## 待办
+Workers 的静态资源设置在 `wrangler.jsonc` 中。无效链接会显示 `src/pages/404.astro` 生成的提示页，HTTP 状态仍为 404。
 
-- 替换 `src/assets/blog-placeholder-*.jpg` 作为默认社交分享图的占位图片。
+## 分享预览
+
+默认分享图位于 `src/assets/social-cover.png`。设置了 `heroImage` 的文章会使用各自的头图。
