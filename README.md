@@ -62,7 +62,8 @@ src/
 
 ## 部署
 
-代码推送到 GitHub `25988ra/my_blog` 的 `main` 分支后，由 Cloudflare 自动构建部署：
+通过 Cloudflare Workers 部署，公开地址为 <https://my-blog.2598857560.workers.dev/>。
+Workers Builds 连接 GitHub `25988ra/my_blog` 的 `main` 分支后，推送即可触发构建和部署。
 
 - 构建命令：`npm run build`
 - 输出目录：`dist`
@@ -70,6 +71,4 @@ src/
 
 ## 待办
 
-- 把 `astro.config.mjs` 中的 `site` 改为实际部署域名，否则 RSS、sitemap 和
-  canonical 链接会指向 `example.com`。
 - 替换 `src/assets/blog-placeholder-*.jpg` 作为默认社交分享图的占位图片。
